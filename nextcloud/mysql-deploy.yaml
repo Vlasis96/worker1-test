@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql1-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysql
+  template:
+    metadata:
+      labels:
+        app: mysql
+    spec:
+      containers:
+        - name: mysql
+          image: mysql:8-alpine
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: nextcloud-db-secret
+                  key: MYSQL_ROOT_PASSWORD
+                  key: MYSQL_PASSWORD
+                  key: MYSQL_USER  
+          ports:
+            - containerPort: 3306
+          volumeMounts:
+            - name: mysql-persistent-storage
+              mountPath: /var/lib/mysql
+      volumes:
+        - name: mysql-persistent-storage
+          persistentVolumeClaim:
+            claimName: mysql-pv1-claim
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql1
+  namespace: nextcloud  
+spec:
+  ports:
+  - port: 3306
+  selector:
+    app: mysql
+              
